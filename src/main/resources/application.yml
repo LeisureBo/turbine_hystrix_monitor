@@ -1,0 +1,27 @@
+server:
+  port: 8105
+spring:
+  application:
+    name: turbine-monitor
+eureka:
+  client:
+    service-url:
+      defaultZone: http://127.0.0.1:8091/eureka/
+turbine:
+  # 配置Eureka中的serviceId列表，表明监控哪些服务，多个逗号分隔
+  app-config: eureka-client-feign,eureka-client-ribbon
+  aggregator: 
+    # 需要监控的服务集群名，多个逗号分割，默认为default(访问时可省略cluster参数)。
+    # 在断路仪表盘界面输入http://.../turbine.stream?cluster={clustername}访问。
+    cluster-config: feign,ribbon
+  # clusterNameExpression用于指定集群名称规则，默认值为'appName'：
+  # 1. 'appName'：这意味着Eureka serviceId最终作为集群关键字，此时turbine.aggregator.clusterConfig需要配置欲监控服务的serviceId(因为是从eureka返回的，需要大写)
+  # 2. 'default'：为所有应用程序使用默认集群，turbine.aggregator.clusterConfig需要使用默认配置。new String("default")：官方文档推荐'default'无效?
+  # 3. metadata['cluster']：假设想要监控的应用配置了eureka.instance.metadata-map.cluster: ABC，则需要配置，同时turbine.aggregator.clusterConfig: ABC
+  cluster-name-expression: metadata['cluster']
+  # 可以让同一主机上的服务通过主机名与端口号的组合来进行区分，默认情况下会以host来区分不同的服务，这会使得在本地调试的时候，本机上的不同服务聚合成一个服务来统计.
+  combine-host-port: true # 默认为true
+
+# Single Hystrix App: http://hystrix-app:port/actuator/hystrix.stream 
+# Cluster via Turbine (default cluster): http://turbine-hostname:port/turbine.stream 
+# Cluster via Turbine (custom cluster): http://turbine-hostname:port/turbine.stream?cluster=[clusterName]
